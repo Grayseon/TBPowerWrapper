@@ -22,18 +22,29 @@ class PowerObserver {
     init(){
         let notificationCenter = NSWorkspace.shared.notificationCenter
         print("listening for power events")
+        self.load()
         
         notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { notification in
             print("going to sleep")
-            shell("sudo", "kextunload", "/applications/turboswitcher_resources/disableturboboost.64bits.kext")
+            self.unload()
         }
         
         notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { notification in
             print("woke up")
-            shell("sudo", "kextutil", "/applications/turboswitcher_resources/disableturboboost.64bits.kext")
+            self.load()
         }
         
         RunLoop.main.run()
+    }
+    
+    private func unload(){
+        print("unloading")
+        shell("sudo", "kextunload", "/applications/tbswitcher_resources/disableturboboost.64bits.kext")
+    }
+    
+    private func load(){
+        print("loading")
+        shell("sudo", "kextutil", "/applications/tbswitcher_resources/disableturboboost.64bits.kext")
     }
 }
 
