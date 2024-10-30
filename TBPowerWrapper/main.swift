@@ -23,16 +23,14 @@ class PowerObserver {
         let notificationCenter = NSWorkspace.shared.notificationCenter
         print("listening for power events")
         
-        /*NotificationCenter.addObserver(forName: NSNotification.Name(rawValue: NSWorkspace.didWakeNotification.rawValue), object: nil, queue: .main) {notification in
-            print("woke up!")
-        }*/
-        
         notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { notification in
             print("going to sleep")
+            shell("sudo", "kextunload", "/applications/turboswitcher_resources/disableturboboost.64bits.kext")
         }
         
         notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { notification in
-            print("waking up")
+            print("woke up")
+            shell("sudo", "kextutil", "/applications/turboswitcher_resources/disableturboboost.64bits.kext")
         }
         
         RunLoop.main.run()
@@ -40,11 +38,3 @@ class PowerObserver {
 }
 
 let _ = PowerObserver()
-
-/*let desktopPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop").path
-
-print(desktopPath.appending("/hey.txt"))
-
-shell("touch", desktopPath.appending("/hey.txt"))
-print(shell("whoami"))*/
-
