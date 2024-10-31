@@ -7,11 +7,14 @@
 
 import Foundation
 import Cocoa
+import os
 
 enum ShellError: Error {
     case processLaunchFailed
     case processFailed
 }
+
+let logger = Logger()
 
 func shell(_ args: String..., completion: ((Int32)->(Void))?) throws {
     let task = Process()
@@ -38,7 +41,8 @@ func unloadKext(completion: @escaping ()->()) throws {
             completion()
         }
     } catch {
-        print("didn't unload")
+        logger.trace("Didn't unload")
+        throw ShellError.processFailed
     }
 }
 
@@ -48,6 +52,7 @@ func loadKext(completion: @escaping ()->()) throws {
             completion()
         }
     } catch {
+        logger.trace("Didn't load")
         throw ShellError.processFailed
     }
 }
@@ -55,33 +60,33 @@ func loadKext(completion: @escaping ()->()) throws {
 class PowerObserver {
     init() {
         let notificationCenter = NSWorkspace.shared.notificationCenter
-        print("listening for power events")
+        print("Listening for power events")
         do {
             try unloadKext() {
-                print("unloaded")
+                print("Unloaded")
                 do {
                     try loadKext() {
-                        print("successfully reloaded kext")
+                        print("Successfully reloaded kext")
                     }
                 } catch {
-                    print("unsuccessful in loading")
+                    logger.trace("Unsuccessful in loading")
                 }
             }
         } catch {
-            print("unsuccesful in unloading")
+            logger.trace("Unsuccesful in unloading")
         }
         
         notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { notification in
-            print("going to sleep")
+            print("Going to sleep")
             try? unloadKext() {
-                print("unloaded")
+                print("Unloaded")
             }
         }
         
         notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { notification in
-            print("woke up")
+            print("Woke up")
             try? loadKext() {
-                print("loaded")
+                print("Loaded")
             }
         }
         
@@ -89,19 +94,32 @@ class PowerObserver {
     }
 }
 
-switch(CommandLine.arguments[1]) {
-case "load":
-    let _ = PowerObserver()
-case "unload":
-    do {
-        try unloadKext() {
-            print("Attemping to unload kext")
+if(CommandLine.arguments.count > 1) {
+    switch(CommandLine.arguments[1]) {
+    case "load":
+        do {
+            try loadKext() {
+                print("Attempting to load kext")
+            }
+            
+            print("Successfully loaded kext")
+            print("Warning: This will only start the kext once. Once the power state changes the effects will be disable.")
+        } catch {
+            logger.trace("Unable to load kext")
         }
-        
-        print("Successfully unloaded kext")
-    } catch {
-        print("Unable to load kext")
+    case "unload":
+        do {
+            try unloadKext() {
+                print("Attemping to unload kext")
+            }
+            
+            print("Successfully unloaded kext")
+        } catch {
+            logger.trace("Unable to load kext")
+        }
+    default:
+        print("No arguments")
     }
-default:
-    print("No arguments")
+} else {
+    let _ = PowerObserver()
 }
