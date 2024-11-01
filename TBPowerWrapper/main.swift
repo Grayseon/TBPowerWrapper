@@ -37,7 +37,7 @@ func shell(_ args: String..., completion: ((Int32)->(Void))?) throws {
 
 func unloadKext(completion: @escaping ()->()) throws {
     do {
-        try shell("sudo", "kextunload", "/applications/tbswitcher_resources/disableturboboost.64bits.kext") {_ in
+        try shell("sudo", "kextunload", "/Library/Extensions/TB.kext") {_ in
             completion()
         }
     } catch {
@@ -48,7 +48,7 @@ func unloadKext(completion: @escaping ()->()) throws {
 
 func loadKext(completion: @escaping ()->()) throws {
     do {
-        try shell("sudo", "kextutil", "/applications/tbswitcher_resources/disableturboboost.64bits.kext") { status in
+        try shell("sudo", "kextutil", "/Library/Extensions/TB.kext") { status in
             completion()
         }
     } catch {
